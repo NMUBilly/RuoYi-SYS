@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.college.mapper.CollegeMapper">
+    
+    <resultMap type="college" id="CollegeResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="address"    column="address"    />
+        <result property="type"    column="type"    />
+        <result property="level"    column="level"    />
+        <result property="introduction"    column="introduction"    />
+        <result property="deleted"    column="deleted"    />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+
+    </resultMap>
+
+    <sql id="selectCollegeVo">
+        select id, name, address, type, level, introduction, deleted, create_time, update_time from college
+    </sql>
+
+    <select id="selectCollegeList" parameterType="College" resultMap="CollegeResult">
+        <include refid="selectCollegeVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if> and deleted = 0
+        </where>
+    </select>
+    
+    <select id="selectCollegeById" parameterType="Long" resultMap="CollegeResult">
+        <include refid="selectCollegeVo"/>
+        where id = #{id} and deleted = 0
+    </select>
+
+    <select id="list" resultType="College">
+        select id,name,address,type,level,introduction,deleted,create_time,update_time
+        from college where deleted = 0
+    </select>
+
+    <insert id="insertCollege" parameterType="College" useGeneratedKeys="true" keyProperty="id">
+        insert into college
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="address != null and address != ''">address,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="level != null and level != ''">level,</if>
+            <if test="introduction != null and introduction != ''">introduction,</if>
+            <if test="createTime != null">sysdate(),</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="address != null and address != ''">#{address},</if>
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="level != null and level != ''">#{level},</if>
+            <if test="introduction != null and introduction != ''">#{introduction},</if>
+            <if test="deleted != null">#{deleted},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCollege" parameterType="College">
+        update college
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="address != null and address != ''">address = #{address},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="level != null and level != ''">level = #{level},</if>
+            <if test="introduction != null and introduction != ''">introduction = #{introduction},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deleteCollegeById" parameterType="Long">
+        update college set deleted = 1 where id = #{id}
+    </update>
+
+    <update id="deleteCollegeByIds" parameterType="String">
+        update college set deleted = 1 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

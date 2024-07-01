@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.college.mapper.StudentMapper">
+    
+    <resultMap type="Student" id="StudentResult">
+        <result property="id"    column="id"    />
+        <result property="snum" column="snum"/>
+        <result property="name"    column="name"    />
+        <result property="gender"    column="gender"    />
+        <result property="gradeId"    column="grade_id"    />
+        <result property="phone"    column="phone"    />
+        <result property="email"    column="email"    />
+        <result property="address"    column="address"    />
+        <result property="password"    column="password"    />
+        <result property="instruction"    column="instruction"    />
+        <result property="deleted"    column="deleted"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <association property="grade" javaType="Grade">
+            <result property="id" column="id"/>
+            <result property="name" column="grade_name"/>
+        </association>
+        <association property="major" javaType="Major">
+            <result property="id" column="id"/>
+            <result property="name" column="major_name"/>
+        </association>
+        <association property="department" javaType="Department">
+            <result property="id" column="id"/>
+            <result property="name" column="department_name"/>
+        </association>
+        <association property="college" javaType="College">
+            <result property="name" column="college_name"/>
+        </association>
+    </resultMap>
+
+    <sql id="selectStudentVo">
+        select id, name,snum, gender, grade_id,
+               phone, email, address, password, instruction, deleted, create_time, update_time from student
+    </sql>
+
+    <select id="selectStudentList" parameterType="Student" resultMap="StudentResult">
+        select s.id, s.snum,s.name, s.gender, s.grade_id, s.phone, s.email, s.address, s.instruction, s.create_time, s.update_time ,
+        g.name as grade_name,
+        m.name as major_name,
+        d.name as department_name,
+        c.name as college_name
+        from student s
+        left join grade g on s.grade_id = g.id
+        left join major m on m.id = g.major_id
+        left join department d on m.department_id = d.id
+        left join college c on d.college_id = c.id
+        <where>  
+            <if test="name != null  and name != ''"> and s.name like concat('%', #{name}, '%')</if>
+            <if test="grade.name != null  and grade.name != ''"> and g.name like concat('%', #{grade.name}, '%')</if>
+        and s.deleted = 0
+        </where>
+    </select>
+    
+    <select id="selectStudentById" parameterType="Long" resultMap="StudentResult">
+        <include refid="selectStudentVo"/>
+        where id = #{id}
+    </select>
+    <select id="collegeToDepart" parameterType="Long" resultType="department">
+        select name,id
+        from department d where college_id = #{id}
+    </select>
+    <select id="departToGrade" parameterType="Long" resultType="grade">
+        select g.name , g.id
+        from grade g
+                 left join major m on m.id = g.major_id
+                 left join department d on m.department_id = d.id
+        where d.id =  #{department_id}
+    </select>
+
+    <insert id="insertStudent" parameterType="Student" useGeneratedKeys="true" keyProperty="id">
+        insert into student
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+                <if test="snum != null">snum,</if>
+            <if test="gender != null">gender,</if>
+            <if test="gradeId != null">grade_id,</if>
+            <if test="phone != null">phone,</if>
+            <if test="email != null">email,</if>
+            <if test="address != null">address,</if>
+            <if test="instruction != null">instruction,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="snum != null">#{snum},</if>
+            <if test="gender != null">#{gender},</if>
+            <if test="gradeId != null">#{gradeId},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="email != null">#{email},</if>
+            <if test="address != null">#{address},</if>
+            <if test="instruction != null">#{instruction},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateStudent" parameterType="Student">
+        update student
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="snum != null">snum = #{snum},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="gradeId != null">grade_id = #{gradeId},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="instruction != null">instruction = #{instruction},</if>
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deleteStudentById" parameterType="Long">
+        update student set deleted = 1 where id = #{id}
+    </update>
+
+    <update id="deleteStudentByIds" parameterType="String">
+        update student set deleted = 1 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

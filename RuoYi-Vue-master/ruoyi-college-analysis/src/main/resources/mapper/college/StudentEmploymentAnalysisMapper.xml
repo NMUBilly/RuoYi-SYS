@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.college.mapper.StudentEmploymentAnalysisMapper">
+    
+    <resultMap type="StudentEmploymentAnalysis" id="StudentEmploymentAnalysisResult">
+        <result property="id"    column="id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="company"    column="company"    />
+        <result property="scale"    column="scale"    />
+        <result property="type"    column="type"    />
+        <result property="position"    column="position"    />
+        <result property="salary"    column="salary"    />
+        <result property="address"    column="address"    />
+        <result property="province"    column="province"    />
+        <result property="industry"    column="industry"    />
+        <result property="startTime"    column="start_time"    />
+        <result property="endTime"    column="end_time"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="deleted"    column="deleted"    />
+        <association property="grade" javaType="Grade">
+            <result property="id" column="id"/>
+            <result property="name" column="grade_name"/>
+        </association>
+        <association property="major" javaType="Major">
+            <result property="id" column="id"/>
+            <result property="name" column="major_name"/>
+        </association>
+        <association property="department" javaType="Department">
+            <result property="id" column="id"/>
+            <result property="name" column="department_name"/>
+        </association>
+        <association property="college" javaType="College">
+            <result property="name" column="college_name"/>
+        </association>
+        <association property="student" javaType="student">
+            <result property="id" column="id"/>
+            <result property="name" column="student_name"/>
+        </association>
+    </resultMap>
+
+    <sql id="selectStudentEmploymentAnalysisVo">
+        select id, student_id, company, scale, type, position, salary, address, province, industry, start_time, end_time, create_time, update_time, deleted from student_employment_analysis
+    </sql>
+
+    <select id="selectStudentEmploymentAnalysisList" parameterType="StudentEmploymentAnalysis" resultMap="StudentEmploymentAnalysisResult">
+        select s.name as student_name,s.snum,sea.id,sea.company,sea.address,sea.scale,sea.industry,sea.type,sea.province,sea.position,sea.start_time,sea.end_time,sea.salary,sea.create_time,sea.update_time,
+        g.name as grade_name,
+        m.name as major_name,
+        d.name as department_name,
+        c.name as college_name
+        from student_employment_analysis sea
+        left join (select * from student where deleted = 0) s on s.id = sea.student_id
+        left join (select * from grade where deleted = 0) g on g.id = s.grade_id
+        left join (select * from major where deleted = 0) m on m.id = g.major_id
+        left join (select * from department where deleted = 0) d on d.id = m.department_id
+        left join (select * from college where deleted = 0) c on c.id = d.college_id
+        <where>
+            <if test="studentId != null "> and student_id = #{studentId}</if>
+        and sea.deleted = 0
+        </where>
+    </select>
+    
+    <select id="selectStudentEmploymentAnalysisById" parameterType="Long" resultMap="StudentEmploymentAnalysisResult">
+        <include refid="selectStudentEmploymentAnalysisVo"/>
+        where id = #{id}
+    </select>
+    <select id="countByProvince" resultType="com.ruoyi.college.domain.bo.EmployeeBo">
+        select student_employment_analysis.province as name ,count(distinct student_id) as value from student_employment_analysis where deleted = 0 group by province
+    </select>
+    <select id="countBySalary" resultType="com.ruoyi.college.domain.bo.EmployeeBo">
+        SELECT '0-3000' AS name, SUM(CASE WHEN salary BETWEEN 0 AND 3000 THEN 1 ELSE 0 END) AS value
+        FROM student_employment_analysis
+        WHERE deleted = 0
+        UNION ALL
+        SELECT '3001-6000' AS name, SUM(CASE WHEN salary BETWEEN 3001 AND 6000 THEN 1 ELSE 0 END) AS value
+        FROM student_employment_analysis
+        WHERE deleted = 0
+        UNION ALL
+        SELECT '6001-9000' AS name, SUM(CASE WHEN salary BETWEEN 6001 AND 9000 THEN 1 ELSE 0 END) AS value
+        FROM student_employment_analysis
+        WHERE deleted = 0
+        UNION ALL
+        SELECT '9001-12000' AS name, SUM(CASE WHEN salary BETWEEN 9001 AND 12000 THEN 1 ELSE 0 END) AS value
+        FROM student_employment_analysis
+        WHERE deleted = 0
+        UNION ALL
+        SELECT '12001-15000' AS name, SUM(CASE WHEN salary BETWEEN 12001 AND 15000 THEN 1 ELSE 0 END) AS value
+        FROM student_employment_analysis
+        WHERE deleted = 0
+        UNION ALL
+        SELECT '15001-18000' AS name, SUM(CASE WHEN salary BETWEEN 15001 AND 18000 THEN 1 ELSE 0 END) AS value
+        FROM student_employment_analysis
+        WHERE deleted = 0
+        UNION ALL
+        SELECT '18001及以上' AS name, SUM(CASE WHEN salary >= 18001 THEN 1 ELSE 0 END) AS value
+        FROM student_employment_analysis
+        WHERE deleted = 0;
+
+    </select>
+
+    <insert id="insertStudentEmploymentAnalysis" parameterType="StudentEmploymentAnalysis" useGeneratedKeys="true" keyProperty="id">
+        insert into student_employment_analysis
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null">student_id,</if>
+            <if test="company != null and company != ''">company,</if>
+            <if test="scale != null and scale != ''">scale,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="position != null and position != ''">position,</if>
+            <if test="salary != null and salary != ''">salary,</if>
+            <if test="address != null and address != ''">address,</if>
+            <if test="province != null and province != ''">province,</if>
+            <if test="industry != null and industry != ''">industry,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null">#{studentId},</if>
+            <if test="company != null and company != ''">#{company},</if>
+            <if test="scale != null and scale != ''">#{scale},</if>
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="position != null and position != ''">#{position},</if>
+            <if test="salary != null and salary != ''">#{salary},</if>
+            <if test="address != null and address != ''">#{address},</if>
+            <if test="province != null and province != ''">#{province},</if>
+            <if test="industry != null and industry != ''">#{industry},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateStudentEmploymentAnalysis" parameterType="StudentEmploymentAnalysis">
+        update student_employment_analysis
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="company != null and company != ''">company = #{company},</if>
+            <if test="scale != null and scale != ''">scale = #{scale},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="position != null and position != ''">position = #{position},</if>
+            <if test="salary != null and salary != ''">salary = #{salary},</if>
+            <if test="address != null and address != ''">address = #{address},</if>
+            <if test="province != null and province != ''">province = #{province},</if>
+            <if test="industry != null and industry != ''">industry = #{industry},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            update_time = sysdate(),
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deleteStudentEmploymentAnalysisById" parameterType="Long">
+        update student_employment_analysis set deleted = 1 where id = #{id}
+    </update>
+
+    <delete id="deleteStudentEmploymentAnalysisByIds" parameterType="String">
+        update student_employment_analysis set deleted = 1 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

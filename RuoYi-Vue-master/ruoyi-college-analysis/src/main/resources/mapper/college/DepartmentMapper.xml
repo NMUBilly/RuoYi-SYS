@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.college.mapper.DepartmentMapper">
+    
+    <resultMap type="DepartmentBo" id="DepartmentResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="introduction"    column="introduction"    />
+        <result property="college_name"    column="college_name"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectDepartmentVo">
+        select d.id, d.name ,c.name AS
+            college_name,d.create_time,d.update_time ,d.introduction FROM college c,department d
+    </sql>
+
+    <select id="selectDepartmentList" parameterType="DepartmentBo" resultMap="DepartmentResult">
+        <include refid="selectDepartmentVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and d.name like concat('%', #{name}, '%')</if>
+             and d.deleted = 0
+             and c.id = d.college_id
+        </where>
+    </select>
+    
+    <select id="selectDepartmentById" parameterType="Long" resultType="department">
+        select d.id,d.name,d.introduction,d.college_id as collegeId
+        from department d
+        where d.id = #{id}
+        and d.deleted = 0
+    </select>
+    <select id="list" resultType="com.ruoyi.college.domain.Department">
+        select id,name,introduction from department where deleted = 0
+    </select>
+
+    <insert id="insertDepartment" parameterType="DepartmentBo" useGeneratedKeys="true" keyProperty="id">
+        insert into department ( name, introduction, college_id, create_time )
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="introduction != null">#{introduction},</if>
+            <if test="collegeId != null">#{collegeId},</if>
+            <if test="createTime == null">sysdate(),</if>
+        </trim>
+    </insert>
+
+    <update id="updateDepartment" parameterType="Department">
+        update department
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="introduction != null">introduction = #{introduction},</if>
+            <if test="collegeId != null">college_id = #{collegeId},</if>
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deleteDepartmentById" parameterType="Long">
+        update department set deleted = 1 where id = #{id}
+    </update>
+
+    <delete id="deleteDepartmentByIds" parameterType="String">
+        update department set deleted = 1 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

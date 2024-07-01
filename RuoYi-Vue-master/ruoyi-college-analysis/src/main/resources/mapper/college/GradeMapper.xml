@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.college.mapper.GradeMapper">
+    
+    <resultMap type="Grade" id="GradeResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="majorId"    column="major_id"    />
+        <result property="instruction"    column="instruction"    />
+        <result property="deleted"    column="deleted"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <association property="major" javaType="Major">
+            <id property="id" column="major_id"/>
+            <result property="name" column="major_name"/>
+        </association>
+    </resultMap>
+
+    <sql id="selectGradeVo">
+        select id, name, major_id, instruction, deleted, create_time,
+               update_time from grade
+    </sql>
+
+    <select id="selectGradeList" parameterType="Grade" resultMap="GradeResult">
+        select m.id,m.name,m.introduction,g.id,g.instruction,g.create_time,g.update_time,m.department_id as major_id,g.name as major_name
+        from major m left join grade g on m.department_id = g.id
+        <where>  
+            <if test="name != null  and name != ''"> and g.name like concat('%', #{name}, '%')
+            </if>
+            and g.deleted = 0
+        </where>
+    </select>
+    
+    <select id="selectGradeById" parameterType="Long" resultMap="GradeResult">
+        <include refid="selectGradeVo"/>
+        where id = #{id} and deleted = 0
+    </select>
+    <select id="list" resultType="com.ruoyi.college.domain.Grade">
+
+    </select>
+
+    <insert id="insertGrade" parameterType="Grade" useGeneratedKeys="true" keyProperty="id">
+        insert into grade
+            <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="name != null">name,</if>
+            <if test="majorId != null">major_id,</if>
+            <if test="instruction != null">instruction,</if>
+            create_time,
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="majorId != null">#{majorId},</if>
+            <if test="instruction != null">#{instruction},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateGrade" parameterType="Grade">
+        update grade
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="majorId != null">major_id = #{majorId},</if>
+            <if test="instruction != null">instruction = #{instruction},</if>
+            <if test="deleted != null">deleted = #{deleted},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deleteGradeById" parameterType="Long">
+        update grade set deleted = 1 where id = #{id}
+    </update>
+
+    <update id="deleteGradeByIds" parameterType="String">
+        update grade set deleted = 1 where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>
